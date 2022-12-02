@@ -3,19 +3,16 @@ import sys
 import re
 import json
 import os
-import asyncio
 from typing import List
 
 
-async def get_entry(id: str):
+def get_entry(id: str):
     print(f"Getting {id}")
     return subprocess.run(["lpass", "show", "-j", id], capture_output=True)
 
 
-async def get_entries(ids: List[str]):
-    results = await asyncio.gather(
-        *[ get_entry(id) for id in ids ]
-    )
+def get_entries(ids: List[str]):
+    results = [ get_entry(id) for id in ids ]
     successful_entries = [ json.loads(p.stdout)[0] for p in results if p.returncode == 0 ]
     failed = [ p for p in results if p.returncode != 0]
     if failed:
@@ -25,7 +22,7 @@ async def get_entries(ids: List[str]):
     return successful_entries
 
 
-async def main():
+def main():
     p = subprocess.run(["lpass", "status"], capture_output=True)
     if p.returncode != 0:
         print(f"Error encountered (are you logged in?), output: {p.stdout} err: {p.stderr}")
@@ -46,7 +43,7 @@ async def main():
         else:
             print(f"Could not match on id for line {e}")
 
-    output_json = await get_entries(ids)
+    output_json = get_entries(ids)
     out_dir = os.path.join(os.curdir, "out")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -57,4 +54,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    sys.exit(asyncio.run(main()))
+    sys.exit(main())
