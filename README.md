@@ -8,3 +8,13 @@ Requires:
 ## Why
 LastPass exports its data via CSV. If you use secure notes, you'll have no idea what your note is
 for as they don't export the name (!) of the note (just the content).
+
+## TODO
+
+- [x] Export raw data from LastPass
+- [ ] Import into 1Password
+- [ ] Import into KeePassXC
+- [ ] Import into BitWarden
+- [ ] Add tests
+- [ ] Rewrite in Go or Rust
+- [ ] Ditch lastpass-cli dependency
