@@ -4,23 +4,25 @@ import re
 import json
 import os
 import asyncio
+from typing import List
 
 
-async def get_entry(id: str) -> dict:
+async def get_entry(id: str):
     print(f"Getting {id}")
-    show = subprocess.run(["lpass", "show", "-j", id], capture_output=True)
-    if show.returncode != 0:
-        print(f"Error encountered while showing entry {id}, output: {show.stdout} err: {show.stderr}")
-        raise subprocess.CalledProcessError(show.returncode)
-    d = json.loads(show.stdout)
-    return d[0]
+    return subprocess.run(["lpass", "show", "-j", id], capture_output=True)
 
 
-async def get_entries(ids):
+async def get_entries(ids: List[str]):
     results = await asyncio.gather(
         *[ get_entry(id) for id in ids ]
     )
-    return results
+    successful_entries = [ json.loads(p.stdout)[0] for p in results if p.returncode == 0 ]
+    failed = [ p for p in results if p.returncode != 0]
+    if failed:
+        print("Warning: Some entries failed to be fetched")
+        for p in failed:
+            print(f"Out: {p.stdout}, err: {p.stderr}")
+    return successful_entries
 
 
 async def main():
@@ -41,6 +43,8 @@ async def main():
         match = re.match(r'^.+\[id: (\d+)\]$', e)
         if match and len(match.groups()) == 1:
             ids.append(match.group(1))
+        else:
+            print(f"Could not match on id for line {e}")
 
     output_json = await get_entries(ids)
     out_dir = os.path.join(os.curdir, "out")
@@ -53,5 +57,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    e = asyncio.run(main())
-    sys.exit(e)
+    sys.exit(asyncio.run(main()))
